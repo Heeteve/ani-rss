@@ -66,6 +66,7 @@ public class RssTask implements BaseTask {
         for (Ani ani : aniList) {
             if (!LOOP.get()) {
                 // 停止循环
+                log.warn("RSS 刷新已停止，本轮未继续处理剩余订阅");
                 return;
             }
 
@@ -93,6 +94,8 @@ public class RssTask implements BaseTask {
                             continue;
                         }
                     }
+                } else {
+                    log.info("RSS 刷新：订阅={} 使用仅通知模式，跳过下载器登录", title);
                 }
                 downloadService.downloadAni(ani);
             } catch (Exception e) {
