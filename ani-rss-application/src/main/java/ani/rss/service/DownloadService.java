@@ -54,7 +54,6 @@ public class DownloadService {
     @Synchronized("LOCK")
     public void downloadAni(Ani ani) {
         if (Boolean.TRUE.equals(ani.getRssNotificationOnly())) {
-            log.info("仅通知 RSS 更新：开始检查订阅={} id={}", ani.getTitle(), ani.getId());
             rssUpdateNotification(ani);
             return;
         }
@@ -279,22 +278,12 @@ public class DownloadService {
      */
     public void rssUpdateNotification(Ani ani) {
         List<Item> items = ItemsUtil.getItems(ani);
-        log.info("RSS 更新通知：订阅={} id={} RSS条目数={} 已初始化={} 已通知集数={}",
-                ani.getTitle(),
-                ani.getId(),
-                items.size(),
-                Boolean.TRUE.equals(ani.getRssNotificationInitialized()),
-                Objects.requireNonNullElse(ani.getRssNotificationEpisodes(), List.of()).size());
         ItemsUtil.omit(ani, items);
         ItemsUtil.procrastinating(ani, items);
 
         Map<Double, Item> episodeItemMap = new LinkedHashMap<>();
         for (Item item : items) {
             Double episode = item.getEpisode();
-            if (Objects.isNull(episode)) {
-                log.warn("RSS 更新通知：跳过未识别集数的条目，订阅={} 条目={}", ani.getTitle(), item.getTitle());
-                continue;
-            }
             Item oldItem = episodeItemMap.get(episode);
             if (Objects.isNull(oldItem) || (!oldItem.getMaster() && item.getMaster())) {
                 episodeItemMap.put(episode, item);
@@ -302,10 +291,8 @@ public class DownloadService {
         }
 
         if (episodeItemMap.isEmpty()) {
-            log.warn("RSS 更新通知：未找到可通知的剧集条目，订阅={}", ani.getTitle());
             return;
         }
-        log.info("RSS 更新通知：订阅={} 去重后剧集数={}", ani.getTitle(), episodeItemMap.size());
 
         List<Double> rssNotificationEpisodes = ani.getRssNotificationEpisodes();
         if (Objects.isNull(rssNotificationEpisodes)) {
@@ -319,43 +306,23 @@ public class DownloadService {
                     .stream()
                     .max(Comparator.comparingDouble(Item::getEpisode))
                     .orElseThrow();
-            log.info("RSS 更新通知：首次检查将通知最新集，订阅={} 集数={} 条目={}",
-                    ani.getTitle(), latestItem.getEpisode(), latestItem.getReName());
-            if (sendRssUpdateNotification(ani, latestItem)) {
-                rssNotificationEpisodes.clear();
-                rssNotificationEpisodes.addAll(episodeItemMap.keySet());
-                ani.setRssNotificationInitialized(true);
-                log.info("RSS 更新通知：首次检查完成，订阅={} 已记录集数={}",
-                        ani.getTitle(), rssNotificationEpisodes.size());
-            } else {
-                log.warn("RSS 更新通知：未创建有效通知任务，本次不初始化订阅，订阅={}", ani.getTitle());
-            }
+            sendRssUpdateNotification(ani, latestItem);
+            rssNotificationEpisodes.clear();
+            rssNotificationEpisodes.addAll(episodeItemMap.keySet());
+            ani.setRssNotificationInitialized(true);
         } else {
             for (Map.Entry<Double, Item> entry : episodeItemMap.entrySet()) {
                 Double episode = entry.getKey();
                 if (rssNotificationEpisodes.contains(episode)) {
-                    log.info("RSS 更新通知：已通知过该集，跳过，订阅={} 集数={}", ani.getTitle(), episode);
                     continue;
                 }
-                log.info("RSS 更新通知：发现新集，准备发送通知，订阅={} 集数={} 条目={}",
-                        ani.getTitle(), episode, entry.getValue().getReName());
-                if (sendRssUpdateNotification(ani, entry.getValue())) {
-                    rssNotificationEpisodes.add(episode);
-                    log.info("RSS 更新通知：已记录新集通知，订阅={} 集数={}", ani.getTitle(), episode);
-                } else {
-                    log.warn("RSS 更新通知：未创建有效通知任务，不记录该集，订阅={} 集数={}",
-                            ani.getTitle(), episode);
-                }
+                sendRssUpdateNotification(ani, entry.getValue());
+                rssNotificationEpisodes.add(episode);
             }
         }
 
         ani.setCurrentEpisodeNumber(ItemsUtil.currentEpisodeNumber(ani, items));
         AniUtil.sync();
-        log.info("RSS 更新通知：检查结束，订阅={} 当前集数={} 已初始化={} 已通知集数={}",
-                ani.getTitle(),
-                ani.getCurrentEpisodeNumber(),
-                Boolean.TRUE.equals(ani.getRssNotificationInitialized()),
-                rssNotificationEpisodes.size());
     }
 
     /**
@@ -363,9 +330,8 @@ public class DownloadService {
      *
      * @param ani  订阅
      * @param item RSS 条目
-     * @return 是否已创建通知发送任务
      */
-    private boolean sendRssUpdateNotification(Ani ani, Item item) {
+    private void sendRssUpdateNotification(Ani ani, Item item) {
         Ani notificationAni = ObjectUtil.clone(ani);
         notificationAni.setSubgroup(StrUtil.blankToDefault(item.getSubgroup(), "未知字幕组"));
 
@@ -373,7 +339,7 @@ public class DownloadService {
         if (!item.getMaster()) {
             text = StrFormatter.format("(备用RSS) {}", text);
         }
-        return NotificationUtil.send(CONFIG, notificationAni, text, NotificationStatusEnum.RSS_UPDATE);
+        NotificationUtil.send(CONFIG, notificationAni, text, NotificationStatusEnum.RSS_UPDATE);
     }
 
     /**
