@@ -70,6 +70,7 @@ body {
 
 /* 选择器 */
 .el-select__popper { /* 弹出层圆角 */
+    z-index: 3000 !important;
     border-radius: var(--el-border-radius-base);
     overflow: hidden;
 
@@ -93,6 +94,7 @@ body {
 
 /* 下拉菜单 */
 .el-dropdown__popper { /* 弹出层圆角 */
+    z-index: 3000 !important;
     border-radius: var(--el-border-radius-base);
     overflow: hidden;
 
@@ -105,6 +107,10 @@ body {
     .el-dropdown-menu__item:hover { /* 悬浮时凸显 */
         background-color: var(--el-fill-color-light);
     }
+}
+
+.el-popper.el-tooltip:not(.el-dropdown__popper):not(.el-select__popper) {
+    z-index: 2000 !important;
 }
 
 /* 圆形按钮, 保持圆形 */
