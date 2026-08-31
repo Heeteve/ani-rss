@@ -77,7 +77,14 @@ public class NotificationUtil {
                 continue;
             }
 
-            if (!statusList.contains(notificationStatusEnum)) {
+            boolean enabledStatus = statusList.contains(notificationStatusEnum);
+            if (notificationStatusEnum == NotificationStatusEnum.RSS_UPDATE &&
+                    statusList.contains(NotificationStatusEnum.DOWNLOAD_START)) {
+                // 兼容旧通知配置，原有“开始下载”通知也接收 RSS 更新
+                enabledStatus = true;
+            }
+
+            if (!enabledStatus) {
                 // 未启用 通知状态
                 continue;
             }
