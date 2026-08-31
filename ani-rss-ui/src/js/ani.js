@@ -35,6 +35,9 @@ export let aniData = {
     "customEpisodeGroupIndex": 0,
     "omit": true,
     "downloadNew": false,
+    "rssNotificationOnly": false,
+    "rssNotificationInitialized": false,
+    "rssNotificationEpisodes": [],
     "notDownload": [],
     "tmdb": {
         "id": "0",

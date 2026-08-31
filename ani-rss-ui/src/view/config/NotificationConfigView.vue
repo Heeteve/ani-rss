@@ -16,6 +16,7 @@
       <SettingsItem label="通知状态">
         <el-checkbox-group v-model:model-value="notificationConfig['statusList']">
           <el-checkbox label="开始下载" value="DOWNLOAD_START"/>
+          <el-checkbox label="RSS 更新" value="RSS_UPDATE"/>
           <el-checkbox label="下载完成" value="DOWNLOAD_END"/>
           <el-checkbox label="缺集" value="OMIT"/>
           <el-checkbox label="错误" value="ERROR"/>
@@ -111,6 +112,7 @@ let notificationConfig = ref({
   "embyDelayed": 0,
   "statusList": [
     "DOWNLOAD_START",
+    "RSS_UPDATE",
     "OMIT",
     "ERROR"
   ]

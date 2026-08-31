@@ -61,9 +61,8 @@ public class RssTask implements BaseTask {
 
     public static void download(List<Ani> aniList) {
         DownloadService downloadService = SpringUtil.getBean(DownloadService.class);
-        if (!TorrentUtil.login()) {
-            return;
-        }
+        boolean downloadLogin = false;
+        boolean downloadLoginFailed = false;
         for (Ani ani : aniList) {
             if (!LOOP.get()) {
                 // 停止循环
@@ -83,6 +82,18 @@ public class RssTask implements BaseTask {
             }
 
             try {
+                if (!Boolean.TRUE.equals(ani.getRssNotificationOnly())) {
+                    if (downloadLoginFailed) {
+                        continue;
+                    }
+                    if (!downloadLogin) {
+                        downloadLogin = TorrentUtil.login();
+                        if (!downloadLogin) {
+                            downloadLoginFailed = true;
+                            continue;
+                        }
+                    }
+                }
                 downloadService.downloadAni(ani);
             } catch (Exception e) {
                 String message = ExceptionUtils.getMessage(e);

@@ -237,6 +237,24 @@ public class Ani implements Serializable {
     private Boolean downloadNew;
 
     /**
+     * 仅通知 RSS 更新
+     */
+    @Schema(description = "仅通知 RSS 更新")
+    private Boolean rssNotificationOnly;
+
+    /**
+     * RSS 更新通知是否已初始化
+     */
+    @Schema(description = "RSS 更新通知是否已初始化")
+    private Boolean rssNotificationInitialized;
+
+    /**
+     * 已通知的 RSS 集数
+     */
+    @Schema(description = "已通知的 RSS 集数")
+    private List<Double> rssNotificationEpisodes;
+
+    /**
      * 不进行下载的集
      */
     @Schema(description = "不进行下载的集")

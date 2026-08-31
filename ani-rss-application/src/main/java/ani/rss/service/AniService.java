@@ -43,6 +43,16 @@ public class AniService {
      * @param ani 订阅
      */
     public void addAni(Ani ani) {
+        boolean rssNotificationOnly = Boolean.TRUE.equals(ani.getRssNotificationOnly());
+        ani.setRssNotificationOnly(rssNotificationOnly)
+                .setRssNotificationInitialized(Boolean.TRUE.equals(ani.getRssNotificationInitialized()));
+        if (Objects.isNull(ani.getRssNotificationEpisodes())) {
+            ani.setRssNotificationEpisodes(new ArrayList<>());
+        }
+        if (rssNotificationOnly) {
+            ani.setMessage(true);
+        }
+
         Optional<Ani> first = AniUtil.ANI_LIST.stream()
                 .filter(it -> it.getId().equals(ani.getId()))
                 .findFirst();
@@ -74,6 +84,10 @@ public class AniService {
         Boolean enable = ani.getEnable();
         if (enable) {
             ThreadUtil.execute(() -> {
+                if (Boolean.TRUE.equals(ani.getRssNotificationOnly())) {
+                    downloadService.downloadAni(ani);
+                    return;
+                }
                 if (TorrentUtil.login()) {
                     downloadService.downloadAni(ani);
                 }
@@ -99,6 +113,12 @@ public class AniService {
      * @param ani 订阅
      */
     public void setAni(Ani ani) {
+        boolean rssNotificationOnly = Boolean.TRUE.equals(ani.getRssNotificationOnly());
+        ani.setRssNotificationOnly(rssNotificationOnly);
+        if (rssNotificationOnly) {
+            ani.setMessage(true);
+        }
+
         Optional<Ani> first = AniUtil.ANI_LIST.stream()
                 .filter(it -> !it.getId().equals(ani.getId()))
                 .filter(it -> it.getTitle().equals(ani.getTitle()) && it.getSeason().equals(ani.getSeason()))
@@ -147,11 +167,26 @@ public class AniService {
             });
         }
 
+        Ani oldAni = first.get();
+        boolean resetRssNotification = !Objects.equals(oldAni.getRssNotificationOnly(), ani.getRssNotificationOnly()) ||
+                (Boolean.TRUE.equals(oldAni.getRssNotificationOnly()) &&
+                        (!Objects.equals(oldAni.getUrl(), ani.getUrl()) ||
+                                !Objects.equals(oldAni.getSeason(), ani.getSeason())));
+
         //  移动种子
-        File torrentDir = TorrentUtil.getTorrentDir(first.get());
-        String[] ignoreProperties = new String[]{"currentEpisodeNumber", "lastDownloadTime"};
-        BeanUtil.copyProperties(ani, first.get(), ignoreProperties);
-        File newTorrentDir = TorrentUtil.getTorrentDir(first.get());
+        File torrentDir = TorrentUtil.getTorrentDir(oldAni);
+        String[] ignoreProperties = new String[]{
+                "currentEpisodeNumber",
+                "lastDownloadTime",
+                "rssNotificationInitialized",
+                "rssNotificationEpisodes"
+        };
+        BeanUtil.copyProperties(ani, oldAni, ignoreProperties);
+        if (resetRssNotification) {
+            oldAni.setRssNotificationInitialized(false)
+                    .setRssNotificationEpisodes(new ArrayList<>());
+        }
+        File newTorrentDir = TorrentUtil.getTorrentDir(oldAni);
         if (!torrentDir.equals(newTorrentDir)) {
             FileUtil.mkdir(newTorrentDir);
             if (torrentDir.exists()) {
