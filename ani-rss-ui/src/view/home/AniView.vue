@@ -240,8 +240,13 @@
               <el-checkbox v-model="props.ani.omit" label="遗漏检测"/>
               <el-checkbox v-model="props.ani.upload" label="自动上传"/>
               <el-checkbox v-model="props.ani.downloadNew" label="只下载最新集"/>
+              <el-checkbox v-model="props.ani.rssNotificationOnly"
+                           label="仅通知 RSS 更新"
+                           @change="rssNotificationOnlyChange"/>
               <el-checkbox v-model="props.ani['procrastinating']" label="摸鱼检测"/>
-              <el-checkbox v-model="props.ani['message']" label="通知"/>
+              <el-checkbox v-model="props.ani['message']"
+                           :disabled="props.ani.rssNotificationOnly"
+                           label="通知"/>
               <el-checkbox v-model="props.ani['completed']" label="完结迁移"/>
             </el-form-item>
           </el-form>
@@ -411,6 +416,12 @@ let getBgmName = () => {
       .finally(() => {
         getBgmNameLoading.value = false
       })
+}
+
+let rssNotificationOnlyChange = value => {
+  if (value) {
+    props.ani.message = true
+  }
 }
 
 let mikanCallback = v => {

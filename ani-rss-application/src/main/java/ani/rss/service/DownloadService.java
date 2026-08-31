@@ -53,6 +53,11 @@ public class DownloadService {
      */
     @Synchronized("LOCK")
     public void downloadAni(Ani ani) {
+        if (Boolean.TRUE.equals(ani.getRssNotificationOnly())) {
+            rssUpdateNotification(ani);
+            return;
+        }
+
         Boolean delete = CONFIG.getDelete();
         Boolean autoDisabled = CONFIG.getAutoDisabled();
         Integer downloadCount = CONFIG.getDownloadCount();
@@ -264,6 +269,77 @@ public class DownloadService {
             ani.setEnable(false);
             AniUtil.sync();
         }
+    }
+
+    /**
+     * 仅发送 RSS 更新通知
+     *
+     * @param ani 订阅
+     */
+    public void rssUpdateNotification(Ani ani) {
+        List<Item> items = ItemsUtil.getItems(ani);
+        ItemsUtil.omit(ani, items);
+        ItemsUtil.procrastinating(ani, items);
+
+        Map<Double, Item> episodeItemMap = new LinkedHashMap<>();
+        for (Item item : items) {
+            Double episode = item.getEpisode();
+            Item oldItem = episodeItemMap.get(episode);
+            if (Objects.isNull(oldItem) || (!oldItem.getMaster() && item.getMaster())) {
+                episodeItemMap.put(episode, item);
+            }
+        }
+
+        if (episodeItemMap.isEmpty()) {
+            return;
+        }
+
+        List<Double> rssNotificationEpisodes = ani.getRssNotificationEpisodes();
+        if (Objects.isNull(rssNotificationEpisodes)) {
+            rssNotificationEpisodes = new ArrayList<>();
+            ani.setRssNotificationEpisodes(rssNotificationEpisodes);
+        }
+
+        boolean initialized = Boolean.TRUE.equals(ani.getRssNotificationInitialized());
+        if (!initialized) {
+            Item latestItem = episodeItemMap.values()
+                    .stream()
+                    .max(Comparator.comparingDouble(Item::getEpisode))
+                    .orElseThrow();
+            sendRssUpdateNotification(ani, latestItem);
+            rssNotificationEpisodes.clear();
+            rssNotificationEpisodes.addAll(episodeItemMap.keySet());
+            ani.setRssNotificationInitialized(true);
+        } else {
+            for (Map.Entry<Double, Item> entry : episodeItemMap.entrySet()) {
+                Double episode = entry.getKey();
+                if (rssNotificationEpisodes.contains(episode)) {
+                    continue;
+                }
+                sendRssUpdateNotification(ani, entry.getValue());
+                rssNotificationEpisodes.add(episode);
+            }
+        }
+
+        ani.setCurrentEpisodeNumber(ItemsUtil.currentEpisodeNumber(ani, items));
+        AniUtil.sync();
+    }
+
+    /**
+     * 发送单个 RSS 更新通知
+     *
+     * @param ani  订阅
+     * @param item RSS 条目
+     */
+    private void sendRssUpdateNotification(Ani ani, Item item) {
+        Ani notificationAni = ObjectUtil.clone(ani);
+        notificationAni.setSubgroup(StrUtil.blankToDefault(item.getSubgroup(), "未知字幕组"));
+
+        String text = StrFormatter.format("{} RSS 已更新", item.getReName());
+        if (!item.getMaster()) {
+            text = StrFormatter.format("(备用RSS) {}", text);
+        }
+        NotificationUtil.send(CONFIG, notificationAni, text, NotificationStatusEnum.RSS_UPDATE);
     }
 
     /**

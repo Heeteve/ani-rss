@@ -307,6 +307,7 @@ public class NotificationConfig implements Serializable {
                 .setComment("")
                 .setStatusList(List.of(
                         NotificationStatusEnum.DOWNLOAD_START,
+                        NotificationStatusEnum.RSS_UPDATE,
                         NotificationStatusEnum.OMIT,
                         NotificationStatusEnum.ERROR
                 ));

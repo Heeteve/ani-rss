@@ -124,7 +124,9 @@ public class AniUtil {
         String url = dto.getUrl();
         String type = dto.getType();
         Boolean enable = dto.getEnable();
+        Boolean rssNotificationOnly = dto.getRssNotificationOnly();
         enable = ObjectUtil.defaultIfNull(enable, true);
+        rssNotificationOnly = ObjectUtil.defaultIfNull(rssNotificationOnly, false);
 
         Assert.notBlank(url, "RSS地址 不能为空");
 
@@ -210,7 +212,8 @@ public class AniUtil {
                 .setGlobalExclude(enabledExclude)
                 // type mikan or other
                 .setType(type)
-                .setEnable(enable);
+                .setEnable(enable)
+                .setRssNotificationOnly(rssNotificationOnly);
 
         subgroup = StrUtil.blankToDefault(subgroup, "未知字幕组");
 
@@ -454,6 +457,9 @@ public class AniUtil {
                 .setCustomEpisodeGroupIndex(CONFIG.getCustomEpisodeGroupIndex())
                 .setOmit(true)
                 .setDownloadNew(false)
+                .setRssNotificationOnly(false)
+                .setRssNotificationInitialized(false)
+                .setRssNotificationEpisodes(new ArrayList<>())
                 .setNotDownload(new ArrayList<>())
                 .setTmdb(
                         new Tmdb()

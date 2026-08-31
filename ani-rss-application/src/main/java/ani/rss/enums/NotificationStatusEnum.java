@@ -9,6 +9,10 @@ public enum NotificationStatusEnum {
      */
     DOWNLOAD_START("🎈", "开始下载"),
     /**
+     * RSS 更新
+     */
+    RSS_UPDATE("📣", "RSS 更新"),
+    /**
      * 下载完成
      */
     DOWNLOAD_END("🎉", "下载完成"),
