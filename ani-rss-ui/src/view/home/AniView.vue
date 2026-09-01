@@ -127,6 +127,11 @@
             <el-form-item label="启用">
               <el-switch v-model:model-value="props.ani.enable"/>
             </el-form-item>
+            <el-form-item label="仅通知">
+              <el-switch
+                  v-model="props.ani.rssNotificationOnly"
+                  @change="rssNotificationOnlyChange"/>
+            </el-form-item>
           </el-form>
         </el-scrollbar>
       </el-tab-pane>
@@ -240,9 +245,6 @@
               <el-checkbox v-model="props.ani.omit" label="遗漏检测"/>
               <el-checkbox v-model="props.ani.upload" label="自动上传"/>
               <el-checkbox v-model="props.ani.downloadNew" label="只下载最新集"/>
-              <el-checkbox v-model="props.ani.rssNotificationOnly"
-                           label="仅通知 RSS 更新"
-                           @change="rssNotificationOnlyChange"/>
               <el-checkbox v-model="props.ani['procrastinating']" label="摸鱼检测"/>
               <el-checkbox v-model="props.ani['message']"
                            :disabled="props.ani.rssNotificationOnly"
