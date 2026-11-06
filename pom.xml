@@ -5,7 +5,7 @@
 
     <groupId>ani.rss</groupId>
     <artifactId>ani-rss</artifactId>
-    <version>3.2.27</version>
+    <version>3.2.56</version>
 
     <name>ani-rss</name>
     <inceptionYear>2025</inceptionYear>
@@ -17,8 +17,10 @@
 
     <packaging>pom</packaging>
     <properties>
-        <java.version>17</java.version>
-        <spring-ai.version>2.0.0</spring-ai.version>
+        <java.version>25</java.version>
+        <hutool.version>5.8.47</hutool.version>
+        <logback.version>1.6.5</logback.version>
+        <spring-ai.version>2.0.1</spring-ai.version>
     </properties>
 
     <modules>
@@ -29,7 +31,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>4.1.1</version>
+        <version>4.1.2</version>
         <relativePath/>
     </parent>
 
@@ -43,22 +45,17 @@
             <dependency>
                 <groupId>org.mnode.ical4j</groupId>
                 <artifactId>ical4j</artifactId>
-                <version>4.3.0</version>
+                <version>4.4.0</version>
             </dependency>
             <dependency>
                 <groupId>org.commonmark</groupId>
                 <artifactId>commonmark</artifactId>
-                <version>0.30.0</version>
+                <version>0.30.1</version>
             </dependency>
             <dependency>
                 <groupId>wushuo.tmdb.api</groupId>
                 <artifactId>tmdb-api</artifactId>
-                <version>1.0.9</version>
-            </dependency>
-            <dependency>
-                <groupId>ebml.reader</groupId>
-                <artifactId>ebml-reader</artifactId>
-                <version>1.0.0</version>
+                <version>1.0.10</version>
             </dependency>
             <dependency>
                 <groupId>org.eclipse.angus</groupId>
@@ -73,19 +70,19 @@
             <dependency>
                 <groupId>org.jsoup</groupId>
                 <artifactId>jsoup</artifactId>
-                <version>1.23.1</version>
+                <version>1.23.2</version>
             </dependency>
             <dependency>
-                <groupId>org.eclipse</groupId>
-                <artifactId>bittorrent</artifactId>
-                <version>0.3.0-v20070627-1030</version>
+                <groupId>com.dampcake</groupId>
+                <artifactId>bencode</artifactId>
+                <version>1.4.2</version>
             </dependency>
 
             <!-- Swagger -->
             <dependency>
                 <groupId>org.springdoc</groupId>
                 <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-                <version>3.1.0</version>
+                <version>3.1.1</version>
             </dependency>
 
             <!-- Spring AI -->
@@ -116,31 +113,9 @@
                     </annotationProcessorPaths>
                 </configuration>
             </plugin>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>versions-maven-plugin</artifactId>
-                <configuration>
-                    <generateBackupPoms>false</generateBackupPoms>
-                </configuration>
-            </plugin>
         </plugins>
         <pluginManagement>
             <plugins>
-                <plugin>
-                    <groupId>org.codehaus.mojo</groupId>
-                    <artifactId>versions-maven-plugin</artifactId>
-                    <version>2.21.0</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-resources-plugin</artifactId>
-                    <version>3.5.0</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-compiler-plugin</artifactId>
-                    <version>3.15.0</version>
-                </plugin>
                 <plugin>
                     <groupId>com.akathist.maven.plugins.launch4j</groupId>
                     <artifactId>launch4j-maven-plugin</artifactId>
@@ -149,7 +124,7 @@
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>exec-maven-plugin</artifactId>
-                    <version>3.6.3</version>
+                    <version>3.6.4</version>
                 </plugin>
                 <plugin>
                     <groupId>com.github.eirslett</groupId>

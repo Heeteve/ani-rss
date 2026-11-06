@@ -1,7 +1,7 @@
 <template>
-  <AniBTView ref="aniBTRef" @callback="mikanCallback"/>
-  <MikanView ref="mikanRef" @callback="mikanCallback"/>
-  <AnimeGardenView ref="animeGardenRef" @callback="mikanCallback"/>
+  <AniBTView ref="aniBTRef" fill-mode @callback="mikanCallback"/>
+  <MikanView ref="mikanRef" fill-mode @callback="mikanCallback"/>
+  <AnimeGardenView ref="animeGardenRef" fill-mode @callback="mikanCallback"/>
   <div class="standby-rss-view">
     <el-alert v-if="!config.standbyRss" :closable="false"
               show-icon
@@ -33,8 +33,8 @@
         </template>
       </el-button>
     </div>
-    <div>
-      <el-table :data="standbyRss" height="400px" size="small">
+    <div class="standby-table-container">
+      <el-table class="standby-table" :data="standbyRss" height="400px" size="small">
         <el-table-column fixed label="字幕组" min-width="100px">
           <template #default="it">
             <div v-if="editIndex !== it.$index">
@@ -183,9 +183,19 @@ defineExpose({normalize})
 
 <style scoped>
 .standby-rss-view {
+  width: 100%;
+  max-width: 100%;
   height: 500px;
   min-width: 0;
   overflow: hidden;
+}
+
+/* 宽列由表格自身滚动承载，不参与计算父级弹窗宽度。 */
+.standby-table-container,
+.standby-table {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .standby-alert {

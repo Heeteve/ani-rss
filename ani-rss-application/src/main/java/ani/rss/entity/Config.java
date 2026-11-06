@@ -2,7 +2,7 @@ package ani.rss.entity;
 
 import ani.rss.enums.AniSortTypeEnum;
 import ani.rss.enums.BgmTokenTypeEnum;
-import com.google.gson.annotations.SerializedName;
+import ani.rss.enums.OffsetTypeEnum;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.experimental.Accessors;
@@ -210,6 +210,12 @@ public class Config implements Serializable {
      */
     @Schema(description = "自动推断剧集偏移")
     private Boolean offset;
+
+    /**
+     * 自动偏移方式
+     */
+    @Schema(defaultValue = "自动偏移方式")
+    private OffsetTypeEnum offsetType;
 
     /**
      * 获取标题时带上年份
@@ -533,12 +539,6 @@ public class Config implements Serializable {
     private Integer customEpisodeGroupIndex;
 
     /**
-     * OpenList driver
-     */
-    @Schema(description = "OpenList Driver")
-    private String provider;
-
-    /**
      * 添加行订阅是是否开启自动上传
      */
     @Schema(description = "新增订阅自动上传")
@@ -611,20 +611,6 @@ public class Config implements Serializable {
     private Boolean forceUpdateTotalEpisodeNumber;
 
     /**
-     * OpenList 离线超时 分钟
-     */
-    @Schema(description = "OpenList 离线超时(分钟)")
-    @SerializedName(value = "openListDownloadTimeout", alternate = "alistDownloadTimeout")
-    private Integer openListDownloadTimeout;
-
-    /**
-     * OpenList 下载重试次数
-     */
-    @Schema(description = "OpenList 下载重试次数")
-    @SerializedName(value = "openListDownloadRetryNumber", alternate = "alistDownloadRetryNumber")
-    private Long openListDownloadRetryNumber;
-
-    /**
      * 设置备份
      */
     @Schema(description = "设置备份")
@@ -655,12 +641,6 @@ public class Config implements Serializable {
     private List<NotificationConfig> notificationConfigList;
 
     /**
-     * 添加订阅时自动复制主rss至备用rss
-     */
-    @Schema(description = "添加订阅时复制主RSS至备用")
-    private Boolean copyMasterToStandby;
-
-    /**
      * 排序方式
      */
     @Schema(description = "排序方式")
@@ -683,12 +663,6 @@ public class Config implements Serializable {
 
     @Schema(description = "bangumi.ini")
     private Boolean bangumiIniEnabled;
-
-    /**
-     * 重名的订阅将允许被替换
-     */
-    @Schema(description = "重名订阅允许替换")
-    private Boolean replace;
 
     /**
      * 最大文件名长度 不包含后缀 如: .mkv .mp4

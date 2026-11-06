@@ -2,12 +2,15 @@ package ani.rss.util.other;
 
 import ani.rss.commons.FileUtils;
 import ani.rss.commons.GsonStatic;
+import ani.rss.config.DefaultAniFactory;
 import ani.rss.entity.*;
 import ani.rss.entity.dto.RssToAniDTO;
 import ani.rss.entity.torrent.TorrentsInfo;
+import ani.rss.enums.OffsetTypeEnum;
 import ani.rss.exception.ResultException;
 import ani.rss.handle.JsonReader;
 import ani.rss.handle.JsonWriter;
+import ani.rss.offset.BaseOffset;
 import ani.rss.service.ClearService;
 import ani.rss.service.DownloadService;
 import ani.rss.service.MikanService;
@@ -15,13 +18,13 @@ import ani.rss.util.basic.HttpReq;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.bean.copier.CopyOptions;
 import cn.hutool.core.date.DatePattern;
-import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.io.resource.ResourceUtil;
 import cn.hutool.core.lang.Assert;
 import cn.hutool.core.thread.ThreadUtil;
 import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.ReflectUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.core.util.URLUtil;
 import cn.hutool.crypto.SecureUtil;
@@ -29,7 +32,6 @@ import cn.hutool.extra.spring.SpringUtil;
 import cn.hutool.http.HttpUtil;
 import cn.hutool.json.JSONUtil;
 import lombok.extern.slf4j.Slf4j;
-import wushuo.tmdb.api.entity.Tmdb;
 
 import java.io.File;
 import java.io.InputStream;
@@ -123,10 +125,16 @@ public class AniUtil {
     public static Ani getAni(RssToAniDTO dto) {
         String url = dto.getUrl();
         String type = dto.getType();
-        Boolean enable = dto.getEnable();
-        Boolean rssNotificationOnly = dto.getRssNotificationOnly();
-        enable = ObjectUtil.defaultIfNull(enable, true);
-        rssNotificationOnly = ObjectUtil.defaultIfNull(rssNotificationOnly, false);
+
+        Boolean enable = Optional.of(dto)
+                .map(RssToAniDTO::getEnable)
+                .orElse(true);
+        Boolean rssNotificationOnly = Optional.of(dto)
+                .map(RssToAniDTO::getRssNotificationOnly)
+                .orElse(false);
+        List<StandbyRss> standbyRssList = Optional.of(dto)
+                .map(RssToAniDTO::getStandbyRssList)
+                .orElse(new ArrayList<>());
 
         Assert.notBlank(url, "RSS地址 不能为空");
 
@@ -134,6 +142,8 @@ public class AniUtil {
 
         Ani ani = AniUtil.createAni();
         ani.setUrl(url);
+        ani.getStandbyRssList()
+                .addAll(standbyRssList);
 
         Map<String, String> paramMap = HttpUtil.decodeParamMap(url, StandardCharsets.UTF_8);
 
@@ -224,18 +234,6 @@ public class AniUtil {
 
         ani.setSubgroup(subgroup);
 
-        List<StandbyRss> standbyRssList = ani.getStandbyRssList();
-
-        boolean copyMasterToStandby = CONFIG.getCopyMasterToStandby();
-        boolean standbyRss = CONFIG.getStandbyRss();
-        if (copyMasterToStandby && standbyRss) {
-            StandbyRss copyStandbyRss = new StandbyRss()
-                    .setUrl(url.trim())
-                    .setOffset(0)
-                    .setLabel(ani.getSubgroup());
-            standbyRssList.add(copyStandbyRss);
-        }
-
         log.debug("获取到动漫信息 {}", JSONUtil.formatJsonStr(GsonStatic.toJson(ani)));
         if (ani.getOva()) {
             return ani;
@@ -243,24 +241,30 @@ public class AniUtil {
 
         // 自动推断剧集偏移
         if (CONFIG.getOffset()) {
-            List<Item> items = ItemsUtil.getItems(ani, url, subgroup);
-            if (items.isEmpty()) {
-                return ani;
-            }
-            Double offset = -(items.stream()
-                    .map(Item::getEpisode)
-                    .min(Comparator.comparingDouble(i -> i))
-                    .get() - 1);
-            log.debug("自动获取到剧集偏移为 {}", offset);
-            ani.setOffset(offset.intValue());
-
-            for (StandbyRss rss : standbyRssList) {
-                rss.setOffset(offset.intValue());
-            }
+            autoOffset(ani);
         }
         return ani;
     }
 
+    private static void autoOffset(Ani ani) {
+        String url = ani.getUrl();
+        Integer offset = autoOffset(ani, url);
+        ani.setOffset(offset);
+
+        List<StandbyRss> standbyRssList = ani.getStandbyRssList();
+        for (StandbyRss standbyRss : standbyRssList) {
+            Integer standbyRssOffset = autoOffset(ani, standbyRss.getUrl());
+            standbyRss.setOffset(standbyRssOffset);
+        }
+    }
+
+    private static Integer autoOffset(Ani ani, String rssUrl) {
+        List<Item> items = ItemsUtil.getItems(ani, rssUrl, "");
+
+        OffsetTypeEnum offsetType = CONFIG.getOffsetType();
+        BaseOffset baseOffset = ReflectUtil.newInstance(offsetType.getBaseOffsetClass());
+        return baseOffset.getOffset(ani, items);
+    }
 
     public static String saveCover(String coverUrl) {
         return saveCover(coverUrl, false);
@@ -430,58 +434,7 @@ public class AniUtil {
     }
 
     public static Ani createAni() {
-        Ani newAni = new Ani();
-        return newAni
-                .setId(UUID.randomUUID().toString())
-                .setMikanTitle("")
-                .setStandbyRssList(new ArrayList<>())
-                .setOffset(0)
-                .setReleaseDate(new DateTime())
-                .setEnable(true)
-                .setOva(false)
-                .setScore(0.0)
-                .setLastDownloadTime(0L)
-                .setImage("")
-                .setThemoviedbName("")
-                .setCustomDownloadPath(false)
-                .setCustomDownloadPathTemplate("")
-                .setGlobalExclude(false)
-                .setCurrentEpisodeNumber(0)
-                .setTotalEpisodeNumber(0)
-                .setMatch(List.of())
-                .setExclude(List.of("720[Pp]", "\\d-\\d", "合集", "特别篇"))
-                .setBgmUrl("")
-                .setSubgroup("")
-                .setCustomEpisode(CONFIG.getCustomEpisode())
-                .setCustomEpisodeStr(CONFIG.getCustomEpisodeStr())
-                .setCustomEpisodeGroupIndex(CONFIG.getCustomEpisodeGroupIndex())
-                .setOmit(true)
-                .setDownloadNew(false)
-                .setRssNotificationOnly(false)
-                .setRssNotificationInitialized(false)
-                .setRssNotificationEpisodes(new ArrayList<>())
-                .setNotDownload(new ArrayList<>())
-                .setTmdb(
-                        new Tmdb()
-                                .setId("")
-                                .setName("")
-                                .setOriginalName("")
-                                .setDate(new Date())
-                )
-                .setUpload(CONFIG.getUpload())
-                .setProcrastinating(true)
-                .setCustomRenameTemplate(CONFIG.getRenameTemplate())
-                .setCustomRenameTemplateEnable(false)
-                .setCustomPriorityKeywordsEnable(false)
-                .setCustomPriorityKeywords(new ArrayList<>())
-                .setMessage(true)
-                .setCustomUploadPathTarget("")
-                .setCustomUploadEnable(false)
-                .setCompleted(true)
-                .setCustomCompleted(false)
-                .setCustomCompletedPathTemplate("")
-                .setCustomTags(new ArrayList<>())
-                .setCustomTagsEnable(false);
+        return DefaultAniFactory.create();
     }
 
 

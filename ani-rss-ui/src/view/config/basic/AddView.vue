@@ -8,6 +8,12 @@
   <SettingsItem label="自动剧集偏移">
     <el-switch v-model:model-value="props.config.offset"/>
   </SettingsItem>
+  <SettingsItem label="自动偏移类型">
+    <el-select v-model="props.config['offsetType']" class="width-150">
+      <el-option value="AUTO_OFFSET" label="AutoOffset"/>
+      <el-option value="BGM_OFFSET" label="BgmOffset"/>
+    </el-select>
+  </SettingsItem>
   <SettingsItem label="BGM日语标题">
     <el-switch v-model:model-value="props.config['bgmJpName']"/>
   </SettingsItem>
@@ -80,16 +86,6 @@
   </SettingsItem>
   <SettingsItem label="自动上传">
     <el-switch v-model="props.config['upload']"/>
-  </SettingsItem>
-  <SettingsItem label="自动替换">
-    <div>
-      <div>
-        <el-switch v-model="props.config['replace']"/>
-      </div>
-      <el-text size="small">
-        重名的订阅将允许被替换
-      </el-text>
-    </div>
   </SettingsItem>
 </template>
 

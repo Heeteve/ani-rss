@@ -40,9 +40,11 @@ public class AniService {
     /**
      * 添加订阅
      *
-     * @param ani 订阅
+     * @param ani      订阅
+     * @param override 是否覆盖重复订阅
      */
-    public void addAni(Ani ani) {
+    public void addAni(Ani ani, Boolean override) {
+        boolean allowOverride = Boolean.TRUE.equals(override);
         boolean rssNotificationOnly = Boolean.TRUE.equals(ani.getRssNotificationOnly());
         ani.setRssNotificationOnly(rssNotificationOnly)
                 .setRssNotificationInitialized(Boolean.TRUE.equals(ani.getRssNotificationInitialized()));
@@ -58,7 +60,10 @@ public class AniService {
                 .findFirst();
 
         if (first.isPresent()) {
-            throw new IllegalArgumentException("此订阅已存在");
+            if (!allowOverride) {
+                throw new IllegalArgumentException("此订阅已存在");
+            }
+            AniUtil.ANI_LIST.remove(first.get());
         }
 
         first = AniUtil.ANI_LIST.stream()
@@ -69,11 +74,9 @@ public class AniService {
         Integer season = ani.getSeason();
 
         if (first.isPresent()) {
-            Config config = ConfigUtil.CONFIG;
-            Boolean replace = config.getReplace();
-            if (replace) {
+            if (allowOverride) {
                 AniUtil.ANI_LIST.remove(first.get());
-                log.info("自动替换 {} 第{}季", title, season);
+                log.info("覆盖订阅 {} 第{}季", title, season);
             } else {
                 throw new IllegalArgumentException("订阅标题重复");
             }
@@ -411,7 +414,8 @@ public class AniService {
             item.setHasDownloaded(false);
             File torrent = TorrentUtil.getTorrent(ani, item);
             if (torrent.exists()) {
-                item.setHasDownloaded(true);
+                item.setHasDownloaded(true)
+                        .setTorrentPath(torrent.getAbsolutePath());
                 continue;
             }
             if (downloadService.itemDownloaded(ani, item, false)) {

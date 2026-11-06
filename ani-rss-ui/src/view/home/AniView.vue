@@ -1,8 +1,8 @@
 <template>
   <PreviewView ref="previewRef" :ani="props.ani"/>
-  <AniBTView ref="aniBTRef" @callback="mikanCallback"/>
-  <MikanView ref="mikanRef" @callback="mikanCallback"/>
-  <AnimeGardenView ref="animeGardenRef" @callback="mikanCallback"/>
+  <AniBTView ref="aniBTRef" fill-mode @callback="mikanCallback"/>
+  <MikanView ref="mikanRef" fill-mode @callback="mikanCallback"/>
+  <AnimeGardenView ref="animeGardenRef" fill-mode @callback="mikanCallback"/>
   <TmdbGroupView ref="tmdbGroupRef" :ani="props.ani"/>
   <div style="padding: 0 12px;">
     <el-tabs v-model="activeName" class="tabs-center">
@@ -49,11 +49,14 @@
             <el-form-item v-if="!props.ani.ova && props.ani.tmdb" label="剧集组">
               <div class="tmdb-group">
                 <el-input v-model="props.ani.tmdb['tmdbGroupId']" placeholder="留空不使用剧集组"/>
-                <el-button bg icon="Menu" text @click="tmdbGroupRef?.show"/>
+                <el-button bg text icon="Menu" @click="tmdbGroupRef?.show"/>
               </div>
             </el-form-item>
             <el-form-item label="BgmUrl">
-              <el-input v-model.trim="props.ani.bgmUrl" placeholder="https://xxx.xxx"/>
+              <div class="tmdb-group">
+                <el-input v-model.trim="props.ani.bgmUrl" placeholder="https://bgm.tv/subject/12345"/>
+                <el-button bg text icon="link" @click="openUrl(props.ani.bgmUrl)"/>
+              </div>
             </el-form-item>
             <el-form-item label="主 RSS">
               <div class="full-width">
@@ -258,7 +261,7 @@
   </div>
   <div class="flex full-width" style="justify-content: space-between;margin-top: 10px;">
     <div>
-      <el-dropdown trigger="click">
+      <el-dropdown v-if="props.editMode" trigger="click">
         <el-button bg text icon="MoreFilled">
           其他
         </el-button>
@@ -456,7 +459,12 @@ let aniBTShow = () => {
   aniBTRef.value?.show(bgmUrl)
 }
 
-let props = defineProps(['ani'])
+let openUrl = (url) => window.open(url)
+
+let props = defineProps({
+  ani: Object,
+  editMode: {type: Boolean, default: false}
+})
 const emit = defineEmits(['callback'])
 </script>
 

@@ -26,7 +26,7 @@
     </div>
   </el-dialog>
   <el-dialog v-model="dialogVisible" title="修改订阅" center v-if="dialogVisible">
-    <AniView v-model:ani="ani" @callback="editChange"/>
+    <AniView v-model:ani="ani" edit-mode @callback="editChange"/>
   </el-dialog>
 </template>
 
@@ -64,7 +64,7 @@ const editAni = () => {
   let action = () => http.setAni(move.value, ani.value)
       .then(res => {
         ElMessage.success(res.message)
-        window.$reLoadList()
+        window.$reLoadList?.()
         dialogVisible.value = false
       })
       .finally(callback.value)
