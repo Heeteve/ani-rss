@@ -14,7 +14,7 @@
     </PageHeaderView>
     <div class="dashboard-body app-page-content app-page-padding">
 
-      <el-scrollbar class="dashboard-scrollbar">
+      <el-scrollbar class="dashboard-scrollbar hide-scrollbar">
         <div class="dashboard-content">
           <div class="metric-grid">
             <div class="metric-item">
@@ -161,7 +161,7 @@
 </template>
 
 <script setup>
-import {computed, onActivated, onDeactivated, onMounted, onUnmounted, ref} from "vue";
+import {computed, onActivated, onDeactivated, onUnmounted, ref} from "vue";
 import {ArrowLeft, ArrowRight, CircleCheck, Download, List, Upload} from "@element-plus/icons-vue";
 import {formatDate, fromNow} from "@/js/format.js";
 import * as http from "@/js/http.js";
@@ -307,8 +307,10 @@ const stopPolling = () => {
   timer = undefined
 }
 
-onMounted(loadAll)
-onActivated(startPolling)
+onActivated(() => {
+  loadAll()
+  startPolling()
+})
 onDeactivated(stopPolling)
 onUnmounted(stopPolling)
 </script>
@@ -467,9 +469,12 @@ onUnmounted(stopPolling)
 }
 
 @media (max-width: 560px) {
-  .metric-grid,
   .dashboard-content {
     grid-template-columns: 1fr;
+  }
+
+  .metric-grid {
+    grid-template-columns: 1fr 1fr;
   }
 
   .metric-item {

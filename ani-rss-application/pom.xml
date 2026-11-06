@@ -5,13 +5,12 @@
     <parent>
         <groupId>ani.rss</groupId>
         <artifactId>ani-rss</artifactId>
-        <version>3.2.27</version>
+        <version>3.2.56</version>
     </parent>
 
     <artifactId>ani-rss-application</artifactId>
 
     <properties>
-        <hutool.version>5.8.47</hutool.version>
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -46,8 +45,8 @@
             <artifactId>thymeleaf</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.eclipse</groupId>
-            <artifactId>bittorrent</artifactId>
+            <groupId>com.dampcake</groupId>
+            <artifactId>bencode</artifactId>
         </dependency>
         <dependency>
             <groupId>org.eclipse.angus</groupId>
@@ -64,10 +63,6 @@
         <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>ebml.reader</groupId>
-            <artifactId>ebml-reader</artifactId>
         </dependency>
         <dependency>
             <groupId>wushuo.tmdb.api</groupId>

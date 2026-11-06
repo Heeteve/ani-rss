@@ -52,10 +52,11 @@
       <el-option value="DOWNLOAD_TIME" label="更新时间"/>
     </el-select>
   </SettingsItem>
-  <SettingsItem label="订阅布局">
-    <el-select v-model="subscriptionViewMode" class="width-150">
-      <el-option label="封面" value="cover"/>
-      <el-option label="卡片" value="card"/>
+  <SettingsItem label="点击封面">
+    <el-select v-model="coverClickAction" class="width-150">
+      <el-option label="编辑订阅" value="edit"/>
+      <el-option label="视频列表" value="playlist"/>
+      <el-option label="编辑封面" value="cover"/>
     </el-select>
   </SettingsItem>
   <SettingsItem label="启动页">
@@ -75,7 +76,6 @@
   <SettingsItem label="其他">
     <el-checkbox v-model="showScore" label="显示评分"/>
     <el-checkbox v-model="showWeek" label="按星期展示"/>
-    <el-checkbox v-model="showPlaylist" label="显示视频列表"/>
     <el-checkbox v-model="showLastDownloadTime" label="显示更新时间"/>
   </SettingsItem>
   <SettingsItem label="自定义">
@@ -105,14 +105,13 @@ import {Adjust, Css3Alt, Js, Moon, Sun} from "@vicons/fa";
 import {
   color,
   colorChange,
+  coverClickAction,
   maxContentWidth,
   showLastDownloadTime,
-  showPlaylist,
   showScore,
   showWeek,
   startupPage,
   store,
-  subscriptionViewMode
 } from "@/js/global.js";
 import {ElMessage} from "element-plus";
 import UploadView from "@/view/custom/UploadView.vue";

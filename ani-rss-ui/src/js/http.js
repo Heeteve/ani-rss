@@ -1,6 +1,5 @@
 import api from "@/js/api.js";
 import {md5} from "js-md5";
-import {base64Encode} from "./global.js";
 
 /**
  * 获取设置
@@ -26,7 +25,7 @@ export let listAni = () => api.post('api/listAni')
  * @param ani 订阅
  * @returns {Promise<unknown>}
  */
-export let addAni = (ani) => api.post('api/addAni', ani)
+export let addAni = (ani, override = false) => api.post(`api/addAni?override=${override}`, ani, {silent: true})
 
 /**
  * 修改订阅
@@ -331,15 +330,6 @@ export let testIpWhitelist = () => fetch('api/testIpWhitelist', {method: 'post'}
  * @returns {Promise<unknown>}
  */
 export let playList = (ani) => api.post('api/playList', ani)
-
-/**
- * 获取内封字幕
- * @param filename 视频文件路径
- * @returns {Promise<unknown>}
- */
-export let getSubtitles = (filename) => {
-    return api.post(`api/getSubtitles?filename=${base64Encode(filename)}`);
-}
 
 /**
  * 开始下载合集

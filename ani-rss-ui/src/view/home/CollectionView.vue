@@ -134,10 +134,7 @@
                 <CustomTagsView :config="data.ani"/>
               </el-form-item>
               <el-form-item label="Torrent">
-                <el-tag v-if="data.filename" closable @close="()=>{
-                data.filename = ''
-                data.torrent = ''
-              }">
+                <el-tag v-if="data.filename" closable @close="clearTorrent">
                   <el-tooltip :content="data.filename">
                     <el-text line-clamp="1" size="small" class="filename">
                       {{ data.filename }}
@@ -230,6 +227,12 @@ let bgmRef = ref()
 
 let rssButtonLoading = ref(false)
 let loading = ref(false)
+
+// 清空已经上传的种子文件及其 Base64 内容。
+let clearTorrent = () => {
+  data.value.filename = ''
+  data.value.torrent = ''
+}
 
 let bgmAdd = (bgm) => {
   loading.value = true

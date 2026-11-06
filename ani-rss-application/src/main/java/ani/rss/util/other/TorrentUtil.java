@@ -21,7 +21,6 @@ import cn.hutool.core.util.ReUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.extra.spring.SpringUtil;
 import lombok.extern.slf4j.Slf4j;
-import org.eclipse.bittorrent.TorrentFile;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -52,6 +51,7 @@ public class TorrentUtil {
      * @return 文件夹
      */
     public static File getTorrentDir(Ani ani) {
+        String id = ani.getId();
         String title = ani.getTitle();
         Boolean ova = ani.getOva();
         Integer season = ani.getSeason();
@@ -59,18 +59,19 @@ public class TorrentUtil {
         File configDir = ConfigUtil.getConfigDir();
 
         String s = PinyinUtils.getPinyinInitialLetters(title);
+        String fastId = id.substring(0, 1);
 
-        File torrents = new File(StrFormatter.format("{}/torrents/{}/Season {}", configDir, title, season));
-        if (!torrents.exists()) {
-            torrents = new File(StrFormatter.format("{}/torrents/{}/{}/Season {}", configDir, s, title, season));
+        // 兼容旧的路径
+        File torrentDir = ova ?
+                new File(StrFormatter.format("{}/torrents/{}/{}", configDir, s, title)) :
+                new File(StrFormatter.format("{}/torrents/{}/{}/Season {}", configDir, s, title, season));
+
+        if (!torrentDir.exists()) {
+            // 新的种子存放路径
+            torrentDir = new File(StrFormatter.format("{}/torrents/{}/{}", configDir, fastId, id));
         }
-        if (ova) {
-            torrents = new File(StrFormatter.format("{}/torrents/{}", configDir, title));
-            if (!torrents.exists()) {
-                torrents = new File(StrFormatter.format("{}/torrents/{}/{}", configDir, s, title));
-            }
-        }
-        return torrents;
+
+        return torrentDir;
     }
 
     /**
@@ -84,11 +85,22 @@ public class TorrentUtil {
         String infoHash = item.getInfoHash();
         File torrents = getTorrentDir(ani);
         String torrent = item.getTorrent();
+
+        File txtFile = new File(torrents, infoHash + ".txt");
+        File torrentFile = new File(torrents, infoHash + ".torrent");
+
+        if (txtFile.exists()) {
+            return txtFile;
+        }
+        if (torrentFile.exists()) {
+            return torrentFile;
+        }
+
         if (ReUtil.contains(StringEnum.MAGNET_REG, torrent)
                 || ReUtil.contains(StringEnum.ED2K_REG, torrent)) {
-            return new File(torrents, infoHash + ".txt");
+            return txtFile;
         }
-        return new File(torrents, infoHash + ".torrent");
+        return torrentFile;
     }
 
     /**
@@ -319,10 +331,8 @@ public class TorrentUtil {
     public static void loadDownloadTool() {
         String download = CONFIG.getDownloadToolType();
 
-        if (download.equals("Alist")) {
-            download = "OpenList";
-            CONFIG.setDownloadToolType(download);
-            ConfigUtil.sync();
+        if (!List.of("Aria2", "qBittorrent", "Transmission").contains(download)) {
+            download = "qBittorrent";
         }
 
         DOWNLOAD = SpringUtil.getBean(ClassUtil.loadClass("ani.rss.download." + download));
@@ -345,8 +355,7 @@ public class TorrentUtil {
             return FileUtil.readUtf8String(file);
         }
         try {
-            TorrentFile torrentFile = new TorrentFile(file);
-            hexHash = torrentFile.getHexHash();
+            return TorrentMetadata.from(file).getMagnetUri();
         } catch (Exception e) {
             log.error("转换种子为磁力链接时出现错误 {}", file);
             log.error(e.getMessage(), e);

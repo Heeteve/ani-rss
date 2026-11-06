@@ -1,1 +1,1 @@
-- refactor: 优化封面补全
+- feat: 新增自动偏移类型, 可跟随 Bangumi 自动偏移

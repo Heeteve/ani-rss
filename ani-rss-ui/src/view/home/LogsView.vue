@@ -13,13 +13,13 @@
               刷新
             </el-button>
           </el-tooltip>
-          <PopconfirmView title="清空当前日志?" @confirm="clearLogs">
-            <template #reference>
-              <el-button :loading="clearLoading" class="auto-button" type="danger" icon="Delete">
-                清空
-              </el-button>
-            </template>
-          </PopconfirmView>
+          <el-button :loading="clearLoading"
+                     class="auto-button"
+                     type="danger"
+                     icon="Delete"
+                     @click="confirmClearLogs">
+            清空
+          </el-button>
         </div>
       </template>
     </PageHeaderView>
@@ -83,17 +83,17 @@
                  :key="`${entry.timestamp}-${index}`"
                  class="log-entry"
                  :class="`level-${entry.level.toLowerCase()}`">
-              <el-tooltip :content="entry.timestamp || '未知时间'" placement="top">
-                <time class="log-time">{{ entry.time || '--:--:--' }}</time>
+              <el-tooltip :content="entry.timestamp" placement="top">
+                <time class="log-time">{{ entry.time }}</time>
               </el-tooltip>
               <span class="log-level">{{ entry.level }}</span>
-              <el-tooltip :content="entry.loggerName || '未知来源'" placement="top">
+              <el-tooltip :content="entry['loggerName']" placement="top">
                 <div class="log-source">
                   <span class="logger-name">{{ entry.shortLoggerName }}</span>
-                  <span class="thread-name">{{ entry.threadName || '未知线程' }}</span>
+                  <span class="thread-name">{{ entry.threadName }}</span>
                 </div>
               </el-tooltip>
-              <pre class="log-message">{{ entry.content }}</pre>
+              <pre class="log-message">{{ entry.message }}</pre>
             </div>
           </div>
         </el-scrollbar>
@@ -105,10 +105,11 @@
 <script setup>
 import {computed, nextTick, onActivated, ref} from "vue";
 import {Search} from "@element-plus/icons-vue";
+import {ElMessageBox} from "element-plus";
 import {authorization} from "@/js/global.js";
-import PopconfirmView from "@/view/custom/PopconfirmView.vue";
 import PageHeaderView from "@/view/custom/PageHeaderView.vue";
 import * as http from "@/js/http.js";
+import {formatTime} from "@/js/format.js";
 
 const levels = ['DEBUG', 'INFO', 'WARN', 'ERROR']
 const loading = ref(true)
@@ -130,22 +131,15 @@ const levelCounts = computed(() => Object.fromEntries(
 ))
 
 const normalizedLogs = computed(() => logs.value.map(item => {
-  const message = item.message || ''
-  const timestamp = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/.test(message)
-      ? message.slice(0, 19)
-      : ''
-  const delimiter = item.loggerName ? ` ${item.loggerName} - ` : ''
-  const contentStart = delimiter ? message.indexOf(delimiter) : -1
-  const content = contentStart >= 0
-      ? message.slice(contentStart + delimiter.length)
-      : message
+  const {loggerName, ts} = item
+
+  const timestamp = formatTime(ts)
 
   return {
     ...item,
     timestamp,
     time: timestamp.slice(11),
-    content,
-    shortLoggerName: item.loggerName?.split('.').pop() || '未知来源'
+    shortLoggerName: loggerName.split('.').pop()
   }
 }))
 
@@ -200,6 +194,22 @@ const clearLogs = () => {
       .finally(() => {
         clearLoading.value = false
       })
+}
+
+// 清理操作不可恢复，执行接口前通过模态弹窗进行二次确认。
+const confirmClearLogs = () => {
+  ElMessageBox.confirm(
+      '日志清空后无法恢复，是否继续？',
+      '清空日志',
+      {
+        confirmButtonText: '确认清空',
+        confirmButtonClass: 'is-text is-has-bg el-button--danger',
+        cancelButtonText: '取消',
+        cancelButtonClass: 'is-text is-has-bg',
+        type: 'warning'
+      }
+  ).then(clearLogs).catch(() => {
+  })
 }
 
 const downloadLogs = () => {

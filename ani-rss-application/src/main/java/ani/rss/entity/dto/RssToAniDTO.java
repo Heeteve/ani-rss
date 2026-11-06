@@ -1,11 +1,13 @@
 package ani.rss.entity.dto;
 
+import ani.rss.entity.StandbyRss;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.experimental.Accessors;
 import org.springframework.ai.mcp.annotation.McpToolParam;
 
 import java.io.Serializable;
+import java.util.List;
 
 @Data
 @Accessors(chain = true)
@@ -31,4 +33,7 @@ public class RssToAniDTO implements Serializable {
     @Schema(description = "是否仅通知 RSS 更新", defaultValue = "false")
     @McpToolParam(required = false)
     private Boolean rssNotificationOnly;
+
+    @Schema(description = "备用rss")
+    private List<StandbyRss> standbyRssList;
 }
